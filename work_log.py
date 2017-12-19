@@ -26,7 +26,18 @@ class WorkLog():
                 self.quit()
 
     def make_new_log(self):
-        pass
+        no_log = 0
+        while no_log == 0:
+            new_path = input('Enter path to new log file: ')
+            try:
+                f = open(new_path)
+                no_log = 1
+                self.filename = new_path
+            except FileNotFoundError:
+                try_again = self.get_input('Invalid path try again or (Q)uit')
+                if try_again == 'q':
+                    sys.exit(0)
+        self.get_data()
 
     def save(self):
         try:
@@ -86,7 +97,20 @@ class WorkLog():
                 self.new_entry()
 
     def new_entry(self):
-        pass
+        new_entry = {}
+        new_entry['Date'] = datetime.date(datetime.now())
+        new_entry['Task Name'] = input('Please enter a task name: ')
+        time_is_added = 0
+        while time_is_added == 0:
+            time_spent = input('Please enter time spent: ')
+            try:
+                new_entry['Time Spent'] = int(time_spent)
+                time_is_added = 1
+            except ValueError:
+                print('Please enter an integer ')
+        new_entry['Notes'] = input('Please enter your notes: ')
+        self.log_data.append(new_entry)
+        print('Added: ', self.show_entry_pretty(new_entry))
 
     def search(self):
         # As a user of the script, if I choose to find a previous entry, I should be presented with four options:
