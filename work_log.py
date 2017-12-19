@@ -1,7 +1,8 @@
-from datetime import date, datetime
+from datetime import datetime
 import csv
 import sys
 import re
+
 
 class WorkLog():
     def __init__(self):
@@ -12,12 +13,12 @@ class WorkLog():
     def get_data(self):
         try:
             with open(self.filename, 'r') as log_file:
-                temp_log_data = csv.DictReader(log_file, fieldnames=self.fieldnames)
+                temp_log_data = csv.DictReader(log_file,
+                                               fieldnames=self.fieldnames)
                 for entry in temp_log_data:
                     self.log_data.append(self.convert_log_to_data(entry))
-            print(self.log_data)
         except FileNotFoundError as e:
-            print('Critical errror:', e, e.args[0])
+            print('Critical error:', e, e.args[0])
             make_new = self.get_input('Make new? (Y) or (N)')
             if make_new == 'y':
                 self.make_new_log()
@@ -28,13 +29,15 @@ class WorkLog():
     def make_new_log(self):
         no_log = 0
         while no_log == 0:
-            new_path = input('Enter path to new log file: ')
+            new_path = input('Enter path & filename to new log file: ')
             try:
-                f = open(new_path)
+                new_file = open(new_path, 'w')
+                new_file.close()
                 no_log = 1
                 self.filename = new_path
             except FileNotFoundError:
-                try_again = self.get_input('Invalid path try again or (Q)uit')
+                try_again = self.get_input('Invalid path (T)ry again or'
+                                           ' (Q)uit')
                 if try_again == 'q':
                     sys.exit(0)
         self.get_data()
@@ -42,7 +45,8 @@ class WorkLog():
     def save(self):
         try:
             with open(self.filename, 'w') as log_file:
-                write_log = csv.DictWriter(log_file, fieldnames=self.fieldnames)
+                write_log = csv.DictWriter(log_file,
+                                           fieldnames=self.fieldnames)
                 write_log.writerows(self.log_data)
             print('Saved')
         except FileNotFoundError as e:
@@ -60,16 +64,15 @@ class WorkLog():
         for letter in display_string:
             if letter == '(':
                 possible_choices.append(display_string[index+1].lower())
-            index +=1
+            index += 1
 
         if numerical_choices is not None:
             # DONE add numerical choices
             indices = []
-            for i in range(0,numerical_choices.__len__()):
+            for i in range(0, numerical_choices.__len__()):
                 indices.append(i)
             possible_choices = possible_choices + indices
 
-        print(possible_choices)
         valid_chosen = 0
         while valid_chosen == 0:
             choice = input(display_string)
@@ -86,7 +89,7 @@ class WorkLog():
     def main_menu(self):
         while 1:
             print(' -- Main Menu -- ')
-            menu_choice = self.get_input('(V)iew, (N)ew, (S)earch, (Q)uit')
+            menu_choice = self.get_input('(V)iew, (N)ew, (S)earch, (Q)uit ')
             if menu_choice == 'v':
                 self.show_log_pretty(show_index=True)
             if menu_choice == 'q':
@@ -98,7 +101,7 @@ class WorkLog():
 
     def new_entry(self):
         new_entry = {}
-        new_entry['Date'] = datetime.date(datetime.now())
+        new_entry['Date'] = self.dt_to_str(datetime.now())
         new_entry['Task Name'] = input('Please enter a task name: ')
         time_is_added = 0
         while time_is_added == 0:
@@ -110,15 +113,18 @@ class WorkLog():
                 print('Please enter an integer ')
         new_entry['Notes'] = input('Please enter your notes: ')
         self.log_data.append(new_entry)
-        print('Added: ', self.show_entry_pretty(new_entry))
+        print('Added: ')
+        self.show_entry_pretty(new_entry)
 
     def search(self):
-        # As a user of the script, if I choose to find a previous entry, I should be presented with four options:
+        # As a user of the script, if I choose to find a previous entry,
+        # I should be presented with four options:
         # DONE find by date
         # DONE find by time spent
         # DONE find by exact search
         # DONE find by pattern
-        choice = self.get_input('Search by (D)ate, (T)ime spent, (E)xact, (P)attern')
+        choice = self.get_input('Search by (D)ate, (T)ime spent, '
+                                '(E)xact, (P)attern')
         search_results = []
 
         if choice == 'd':
@@ -128,14 +134,16 @@ class WorkLog():
             dates_list = sorted(set(dates_list))
             for date in dates_list:
                 print(dates_list.index(date), date)
-            date_chosen = self.get_input('Enter the number of date: ', dates_list)
+            date_chosen = self.get_input('Enter the number of date: ',
+                                         dates_list)
             for entry in self.log_data:
                 if entry['Date'] == dates_list[date_chosen]:
                     search_results.append(entry)
             self.print_results(search_results)
         elif choice == 't':
             # When finding by time spent, I should be allowed to enter the
-            # number of minutes a task took and be able to choose one to see entries from.
+            # number of minutes a task took and be able to choose one to see
+            # entries from.
             valid_time = 0
             while valid_time == 0:
                 search_time_spent = input('Enter time spent (mins): ')
@@ -145,8 +153,8 @@ class WorkLog():
                 except ValueError:
                     print('Please enter an integer: ')
             for line in self.log_data:
-               if line['Time Spent'] == search_time_spent:
-                   search_results.append(line)
+                if line['Time Spent'] == search_time_spent:
+                    search_results.append(line)
             self.print_results(search_results)
         elif choice == 'e':
             # When finding by an exact string, I should be allowed to enter a
@@ -181,21 +189,28 @@ class WorkLog():
                 self.show_entry_pretty(entry)
 
     def convert_log_to_data(self, line):
-        #Convert strings from text file to data types for search/comparison
+        # Convert strings from text file to data types for search/comparison
         new_line = {}
         for header in line:
             if header == 'Date':
-                #Convert to datetime.date
+                # Convert to datetime.date
                 new_line['Date'] = self.str_to_dt(line['Date'])
             if header == 'Time Spent':
-                #Convert to int
+                # Convert to int
                 try:
                     new_line['Time Spent'] = int(line['Time Spent'])
-                except ValueError:
+                except ValueError as e:
                     print('Log file error', e)
             else:
                 new_line[header] = line[header]
         return new_line
+
+    def dt_to_str(self, dt):
+        try:
+            date = datetime.strftime(dt, '%Y-%m-%d')
+            return date
+        except ValueError as e:
+            print('Problem with date:', dt, e.args[0])
 
     def str_to_dt(self, date_str):
         try:
@@ -237,6 +252,7 @@ class WorkLog():
     def run(self):
         self.get_data()
         self.main_menu()
+
 
 if __name__ == '__main__':
     worklog = WorkLog()
