@@ -29,7 +29,11 @@ class WorkLog():
     def make_new_log(self):
         no_log = 0
         while no_log == 0:
-            new_path = input('Enter path & filename to new log file: ')
+            create_here = self.get_input('Create default? (Y) or (N) ')
+            if create_here == 'y':
+                new_path = './work_log.csv'
+            else:
+                new_path = input('Enter path & filename to new log file: ')
             try:
                 new_file = open(new_path, 'w')
                 new_file.close()
@@ -124,7 +128,7 @@ class WorkLog():
         # DONE find by exact search
         # DONE find by pattern
         choice = self.get_input('Search by (D)ate, (T)ime spent, '
-                                '(E)xact, (P)attern')
+                                '(E)xact, (P)attern ')
         search_results = []
 
         if choice == 'd':
